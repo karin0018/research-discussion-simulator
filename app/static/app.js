@@ -790,6 +790,13 @@ document.getElementById("chat-file-input").addEventListener("change", (event) =>
   }
 });
 
+document.getElementById("user-message").addEventListener("keydown", (event) => {
+  if (event.key === "Enter" && !event.shiftKey) {
+    event.preventDefault();
+    document.getElementById("chat-form").requestSubmit();
+  }
+});
+
 document.getElementById("llm-config-form").addEventListener("submit", async (event) => {
   event.preventDefault();
   const payload = {
