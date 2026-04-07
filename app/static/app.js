@@ -793,7 +793,7 @@ document.getElementById("chat-file-input").addEventListener("change", (event) =>
 document.getElementById("user-message").addEventListener("keydown", (event) => {
   if (event.key === "Enter" && !event.shiftKey) {
     event.preventDefault();
-    document.getElementById("chat-form").requestSubmit();
+    document.getElementById("chat-form").dispatchEvent(new SubmitEvent("submit", {cancelable: true}));
   }
 });
 
