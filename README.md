@@ -2,6 +2,8 @@
 
 [中文说明](README.zh-CN.md)
 
+![Overview](overview.png)
+
 Research Discussion Simulator is a local web app for people who want to think through research ideas with several AI collaborators. You can start with a rough question, invite different roles into the discussion, upload notes or papers as context, and use the conversation to clarify your research problem, method, experiments, and risks.
 
 The app starts from a clean state. It includes only the built-in roles and empty example data, so your conversations, memories, profile, uploaded files, and model settings stay local unless you choose to share them.
