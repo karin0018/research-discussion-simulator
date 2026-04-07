@@ -1,0 +1,11 @@
+{
+  "conversation_id": "example-empty-conversation",
+  "mode": "group",
+  "selected_agents": [],
+  "memory_enabled": true,
+  "user_context": "",
+  "perspectives": {},
+  "messages": [],
+  "created_at": null,
+  "updated_at": null
+}

@@ -1,0 +1,6 @@
+{
+  "provider": "codex_cli",
+  "model": "gpt-5.4",
+  "cli_timeout_seconds": 180,
+  "cli_command": ["codex", "exec", "--skip-git-repo-check", "{combined_prompt}"]
+}

@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Research Discussion Simulator</title>
+    <link rel="stylesheet" href="/static/style.css" />
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  </head>
+  <body>
+    <div class="page-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <p class="eyebrow">Multi-Agent Lab</p>
+          <h1>科研讨论模拟器</h1>
+          <p class="subtle">把导师、同行、跨方向研究者和审稿人请进同一个讨论空间。</p>
+        </div>
+
+        <section class="panel" id="panel-status">
+          <div class="panel-head">
+            <h2>模型后端状态</h2>
+            <button type="button" class="panel-toggle-button" data-toggle-panel="panel-status">收起</button>
+          </div>
+          <div class="panel-body">
+            <div id="provider-status-card" class="status-card">
+              <p class="subtle">正在读取当前后端状态...</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel" id="panel-llm-config">
+          <div class="panel-head">
+            <h2>模型配置</h2>
+            <button type="button" class="panel-toggle-button" data-toggle-panel="panel-llm-config">收起</button>
+          </div>
+          <div class="panel-body">
+            <form id="llm-config-form" class="upload-form">
+              <label class="field">
+                <span>服务</span>
+                <select id="cfg-service">
+                  <option value="codex">Codex</option>
+                  <option value="claude">Claude</option>
+                </select>
+              </label>
+              <label class="field">
+                <span>Model</span>
+                <select id="cfg-model"></select>
+              </label>
+              <p class="subtle">选择后保存，后台会自动切换到对应服务，不需要手动输入命令。</p>
+              <button type="submit">应用服务配置</button>
+            </form>
+            <p id="llm-config-status" class="subtle"></p>
+          </div>
+        </section>
+
+        <section class="panel" id="panel-mode">
+          <div class="panel-head">
+            <h2>讨论模式</h2>
+            <button type="button" class="panel-toggle-button" data-toggle-panel="panel-mode">收起</button>
+          </div>
+          <div class="panel-body">
+            <div class="toggle-row">
+              <label><input type="radio" name="mode" value="one_to_one" checked /> 一对一</label>
+              <label><input type="radio" name="mode" value="group" /> 一对多</label>
+            </div>
+            <div class="inline-actions sidebar-actions">
+              <button type="button" id="new-discussion-button" class="secondary-button">新讨论</button>
+              <label class="memory-inline-toggle">
+                <input type="checkbox" id="memory-enabled" checked />
+                <span>启用 memory</span>
+              </label>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel" id="panel-agents">
+          <div class="panel-head">
+            <h2>选择讨论者</h2>
+            <button type="button" class="panel-toggle-button" data-toggle-panel="panel-agents">收起</button>
+          </div>
+          <div class="panel-body">
+            <div id="agent-list" class="agent-list"></div>
+          </div>
+        </section>
+
+        <section class="panel" id="panel-user-profile">
+          <div class="panel-head">
+            <h2>用户角色卡</h2>
+            <button type="button" class="panel-toggle-button" data-toggle-panel="panel-user-profile">收起</button>
+          </div>
+          <div class="panel-body">
+            <form id="user-profile-form" class="upload-form">
+            <label class="field">
+              <span>姓名</span>
+              <input id="user-profile-name" type="text" required />
+            </label>
+            <label class="field">
+              <span>身份标题</span>
+              <input id="user-profile-title" type="text" required />
+            </label>
+            <label class="field">
+              <span>研究关注</span>
+              <textarea id="user-profile-expertise" rows="3"></textarea>
+            </label>
+            <label class="field">
+              <span>思考风格</span>
+              <textarea id="user-profile-style" rows="2" required></textarea>
+            </label>
+            <label class="field">
+              <span>当前目标</span>
+              <textarea id="user-profile-objective" rows="2" required></textarea>
+            </label>
+            <label class="field">
+              <span>阶段总结</span>
+              <textarea id="user-profile-summary" rows="3"></textarea>
+            </label>
+            <button type="submit">保存用户角色卡</button>
+            </form>
+            <p id="user-profile-status" class="subtle"></p>
+          </div>
+        </section>
+
+        <section class="panel" id="panel-custom">
+          <div class="panel-head">
+            <h2>自定义角色卡</h2>
+            <button type="button" class="panel-toggle-button" data-toggle-panel="panel-custom">收起</button>
+          </div>
+          <div class="panel-body">
+            <form id="agent-form" class="upload-form">
+            <input id="editing-agent-id" type="hidden" />
+            <label class="field">
+              <span>姓名</span>
+              <input id="agent-name" type="text" placeholder="如：Prof. Zhang" required />
+            </label>
+            <label class="field">
+              <span>身份标题</span>
+              <input id="agent-title" type="text" placeholder="如：多模态方向导师" required />
+            </label>
+            <label class="field">
+              <span>专长</span>
+              <textarea id="agent-expertise" rows="3" placeholder="每行一个专长，例如：&#10;多模态学习&#10;论文写作&#10;实验设计" required></textarea>
+            </label>
+            <label class="field">
+              <span>说话风格</span>
+              <textarea id="agent-style" rows="2" placeholder="如：严谨、追问细节、强调因果解释" required></textarea>
+            </label>
+            <label class="field">
+              <span>核心目标</span>
+              <textarea id="agent-objective" rows="2" placeholder="如：帮助学生把研究方案打磨成可发表工作" required></textarea>
+            </label>
+            <div class="inline-actions">
+              <button id="agent-submit-button" type="submit">创建角色卡</button>
+              <button id="agent-cancel-button" type="button" class="secondary-button hidden">取消编辑</button>
+            </div>
+            </form>
+            <p id="agent-status" class="subtle"></p>
+            <div class="manager-block">
+              <div class="manager-header">
+                <strong>我的自定义角色</strong>
+                <span id="custom-agent-count" class="subtle">0 个</span>
+              </div>
+              <div id="custom-agent-list" class="manager-list"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel" id="panel-knowledge">
+          <div class="panel-head">
+            <h2>知识库上传</h2>
+            <button type="button" class="panel-toggle-button" data-toggle-panel="panel-knowledge">收起</button>
+          </div>
+          <div class="panel-body">
+            <form id="upload-form" class="upload-form">
+            <label class="field">
+              <span>作用域</span>
+              <select name="scope" id="knowledge-scope">
+                <option value="global">公共知识库</option>
+                <option value="agent">绑定到专家</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>绑定专家</span>
+              <select name="agent_id" id="knowledge-agent"></select>
+            </label>
+            <label class="field">
+              <span>选择文件</span>
+              <input type="file" name="file" accept=".txt,.md,.pdf,.docx,.doc" required />
+            </label>
+            <button type="submit">上传资料</button>
+            </form>
+            <p id="upload-status" class="subtle"></p>
+          </div>
+        </section>
+
+        <section class="panel" id="panel-history">
+          <div class="panel-head">
+            <h2>历史会话</h2>
+            <button type="button" class="panel-toggle-button" data-toggle-panel="panel-history">收起</button>
+          </div>
+          <div class="panel-body">
+            <div class="history-tools">
+              <label class="field compact-field">
+                <span>搜索</span>
+                <input id="conversation-search" type="text" placeholder="按主题、上下文、角色搜索" />
+              </label>
+              <div class="history-filter-row">
+                <label class="field compact-field">
+                  <span>模式</span>
+                  <select id="conversation-mode-filter">
+                    <option value="all">全部</option>
+                    <option value="one_to_one">一对一</option>
+                    <option value="group">一对多</option>
+                  </select>
+                </label>
+                <label class="field compact-field">
+                  <span>角色</span>
+                  <select id="conversation-agent-filter">
+                    <option value="all">全部角色</option>
+                  </select>
+                </label>
+              </div>
+            </div>
+            <div id="conversation-list" class="conversation-list"></div>
+          </div>
+        </section>
+      </aside>
+
+      <main class="main-stage">
+        <section class="hero">
+          <div>
+            <p class="eyebrow">Discussion Workspace</p>
+            <h2>让不同科研角色审查、质疑并打磨你的想法</h2>
+          </div>
+          <div class="hero-card">
+            <p>支持单聊、群聊、长期记忆和知识库参考。</p>
+          </div>
+        </section>
+
+        <section id="chat-window" class="chat-window"></section>
+
+        <section class="insight-strip" id="god-view-panel">
+          <div class="insight-header">
+            <strong>上帝视角</strong>
+            <div class="inline-actions">
+              <select id="god-view-filter" class="insight-filter">
+                <option value="all">全部角色</option>
+              </select>
+              <button type="button" class="panel-toggle-button" data-toggle-panel="god-view-panel">收起</button>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div id="god-view-list" class="god-view-list"></div>
+          </div>
+        </section>
+
+        <form id="chat-form" class="chat-form">
+          <div class="chat-attachments" id="chat-attachments"></div>
+          <div class="chat-input-row">
+            <label class="attach-btn" title="上传文件（PDF / Word / TXT / MD）">
+              <input type="file" id="chat-file-input" accept=".txt,.md,.pdf,.docx,.doc" style="display:none" />
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+            </label>
+            <textarea
+              id="user-message"
+              placeholder="输入你的科研问题、研究想法、实验设计或论文计划..."
+              rows="3"
+              required
+            ></textarea>
+            <button type="submit" class="send-btn" title="发送">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            </button>
+          </div>
+          <div class="actions">
+            <p id="session-hint" class="subtle">新会话尚未开始。</p>
+          </div>
+        </form>
+      </main>
+    </div>
+
+    <template id="message-template">
+      <article class="message-card">
+        <div class="message-meta"></div>
+        <div class="message-content"></div>
+      </article>
+    </template>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>
